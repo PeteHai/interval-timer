@@ -175,7 +175,7 @@ export default class Timer extends React.Component {
         btnState: "Start",
       });
     } else if (this.state.btnState == "DONE") {
-      this.reset()
+      this.reset();
     }
   };
 
