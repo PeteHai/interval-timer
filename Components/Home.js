@@ -4,7 +4,7 @@ import Timer from "./Timer";
 export default function Home({ navigation }) {
   return (
     <View styles={styles.container}>
-      <Text>let's get a timer going</Text>
+      <Text>Interval timer...</Text>
       <Timer />
     </View>
   );

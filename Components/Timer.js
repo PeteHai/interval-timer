@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Vibration,
-  View,
-  Button,
-  Text,
-  TextInput,
-  StyleSheet,
-} from "react-native";
+import { View, Button, Text, TextInput, StyleSheet } from "react-native";
 
 let pomInterval;
 
@@ -22,16 +15,22 @@ export default class Timer extends React.Component {
       breakSecs: "",
       timerState: "WORK!",
       btnState: "Start",
+      currentRepState: "",
+      repsNum: "",
+      currentSetsState: "",
+      setsNum: "",
+      setRestNum: "",
     };
   }
 
-  vibrate = () => {
-    Vibration.vibrate([500, 500, 500]);
-  };
-
   pomTimer = () => {
+    //setInterval,1000 means that this code will run every second
     pomInterval = setInterval(() => {
+      //decrease reps number here
       let newSec = this.state.seconds;
+      let newReps = this.state.currentRepState;
+      let newSets = this.state.currentSetsState;
+
       newSec--;
       if (newSec < 0) {
         newSec = 59;
@@ -41,13 +40,27 @@ export default class Timer extends React.Component {
         seconds: newSec,
       });
 
+      if (newSets <= 0) {
+        //if no more sets are remaining then workout is complete - message and reset
+      }
+
+      if (newReps <= 0) {
+        //when no more reps are remaining reduce sets by one and reset current reps to repNum
+        newSets--;
+        this.setState({
+          currentSetsState: newSets,
+          currentRepState: this.state.repsNum,
+        });
+      }
+
       if (newSec <= 0 && this.state.minutes <= 0) {
-        this.vibrate();
-        if (this.state.timerState == "WORK!") {
+        if (this.state.timerState === "WORK!") {
+          newReps--;
           this.setState({
             timerState: "Rest",
             minutes: this.state.breakMins,
             seconds: this.state.breakSecs,
+            currentRepState: newReps,
           });
         } else {
           this.setState({
@@ -94,6 +107,32 @@ export default class Timer extends React.Component {
     });
   };
 
+  changeRepsNum = (num) => {
+    clearInterval(pomInterval);
+    this.setState({
+      currentRepState: num || 0,
+      repsNum: num || 0,
+      btnState: "Start",
+    });
+  };
+
+  changeSetsNum = (num) => {
+    clearInterval(pomInterval);
+    this.setState({
+      currentSetsState: num || 0,
+      setsNum: num || 0,
+      btnState: "Start",
+    });
+  };
+
+  changeSetRestNum = (num) => {
+    clearInterval(pomInterval);
+    this.setState({
+      setRestNum: num || 0,
+      btnState: "Start",
+    });
+  };
+
   // Creating the functionality for the pause/start button
   chnageBtnState = () => {
     if (this.state.btnState == "Start") {
@@ -116,12 +155,16 @@ export default class Timer extends React.Component {
       this.setState({
         minutes: this.state.workmins,
         seconds: this.state.worksecs,
+        currentRepState: this.state.repsNum,
+        currentSetsState: this.state.setsNum,
         btnState: "Start",
       });
     } else {
       this.setState({
         minutes: this.state.breakMins,
         seconds: this.state.breakSecs,
+        currentRepState: this.state.repsNum,
+        currentSetsState: this.state.setsNum,
         btnState: "Start",
       });
     }
@@ -134,6 +177,13 @@ export default class Timer extends React.Component {
         <Text style={styles.textStyles}>
           {this.state.minutes}:{this.state.seconds}
         </Text>
+        <Text>
+          Remaining Reps: {this.state.currentRepState}/{this.state.repsNum}
+        </Text>
+        <Text>
+          Remaining sets: {this.state.currentSetsState}/{this.state.setsNum}
+        </Text>
+
         <Text>
           <Button
             style={styles.buttonStyles}
@@ -181,18 +231,24 @@ export default class Timer extends React.Component {
         <Text>Reps:</Text>
         <TextInput
           style={styles.inputStyles}
+          value={this.state.repsNum.toString()}
           placeholder="number of reps"
+          onChangeText={this.changeRepsNum}
           keyboardType="numeric"
         />
         <Text>Sets:</Text>
         <TextInput
           style={styles.inputStyles}
+          value={this.state.setsNum.toString()}
           placeholder="number of sets"
+          onChangeText={this.changeSetsNum}
           keyboardType="numeric"
         />
         <TextInput
           style={styles.inputStyles}
+          value={this.state.setRestNum.toString()}
           placeholder="rest between sets"
+          onChangeText={this.changeSetRestNum}
           keyboardType="numeric"
         />
       </View>
