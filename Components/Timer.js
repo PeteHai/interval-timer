@@ -26,7 +26,6 @@ export default class Timer extends React.Component {
   pomTimer = () => {
     //setInterval,1000 means that this code will run every second
     pomInterval = setInterval(() => {
-      //decrease reps number here
       let newSec = this.state.seconds;
       let newReps = this.state.currentRepState;
       let newSets = this.state.currentSetsState;
@@ -40,34 +39,43 @@ export default class Timer extends React.Component {
         seconds: newSec,
       });
 
-      if (newSets <= 0) {
-        //if no more sets are remaining then workout is complete - message and reset
-      }
-
-      if (newReps <= 0) {
-        //when no more reps are remaining reduce sets by one and reset current reps to repNum
-        newSets--;
-        this.setState({
-          currentSetsState: newSets,
-          currentRepState: this.state.repsNum,
-        });
-      }
-
+      //if work interval is done, switch to rest interval
       if (newSec <= 0 && this.state.minutes <= 0) {
         if (this.state.timerState === "WORK!") {
-          newReps--;
           this.setState({
             timerState: "Rest",
             minutes: this.state.breakMins,
             seconds: this.state.breakSecs,
             currentRepState: newReps,
+            currentSetsState: newSets,
           });
-        } else {
+        } else if (this.state.timerState === "Rest") {
+          //if rest interval is done then switch to work interval, +1 to the rep
+          newReps++;
+          if (newReps > this.state.repsNum) {
+            //when reps exceeds the total reps increase sets by one and make current reps 1 (first rep of a new set)
+            newSets++;
+            newReps = 1;
+          }
           this.setState({
             timerState: "WORK!",
             minutes: this.state.workmins,
             seconds: this.state.worksecs,
+            currentRepState: newReps,
+            currentSetsState: newSets,
           });
+
+          if (newSets > this.state.setsNum) {
+            clearInterval(pomInterval);
+            this.setState({
+              timerState: "FINISHED",
+              minutes: this.state.workmins,
+              seconds: this.state.worksecs,
+              currentRepState: 1,
+              currentSetsState: 1,
+              btnState: "DONE",
+            });
+          }
         }
       }
     }, 1000);
@@ -110,7 +118,7 @@ export default class Timer extends React.Component {
   changeRepsNum = (num) => {
     clearInterval(pomInterval);
     this.setState({
-      currentRepState: num || 0,
+      currentRepState: 1,
       repsNum: num || 0,
       btnState: "Start",
     });
@@ -119,7 +127,7 @@ export default class Timer extends React.Component {
   changeSetsNum = (num) => {
     clearInterval(pomInterval);
     this.setState({
-      currentSetsState: num || 0,
+      currentSetsState: 1,
       setsNum: num || 0,
       btnState: "Start",
     });
@@ -133,21 +141,6 @@ export default class Timer extends React.Component {
     });
   };
 
-  // Creating the functionality for the pause/start button
-  chnageBtnState = () => {
-    if (this.state.btnState == "Start") {
-      this.pomTimer();
-      this.setState({
-        btnState: "Pause",
-      });
-    } else {
-      clearInterval(pomInterval);
-      this.setState({
-        btnState: "Start",
-      });
-    }
-  };
-
   // Creating the functionality for the reset button
   reset = () => {
     clearInterval(pomInterval);
@@ -155,18 +148,34 @@ export default class Timer extends React.Component {
       this.setState({
         minutes: this.state.workmins,
         seconds: this.state.worksecs,
-        currentRepState: this.state.repsNum,
-        currentSetsState: this.state.setsNum,
+        currentRepState: 1,
+        currentSetsState: 1,
         btnState: "Start",
       });
     } else {
       this.setState({
         minutes: this.state.breakMins,
         seconds: this.state.breakSecs,
-        currentRepState: this.state.repsNum,
-        currentSetsState: this.state.setsNum,
+        currentRepState: 1,
+        currentSetsState: 1,
         btnState: "Start",
       });
+    }
+  };
+  // Creating the functionality for the pause/start button
+  chnageBtnState = () => {
+    if (this.state.btnState == "Start") {
+      this.pomTimer();
+      this.setState({
+        btnState: "Pause",
+      });
+    } else if (this.state.btnState == "Pause") {
+      clearInterval(pomInterval);
+      this.setState({
+        btnState: "Start",
+      });
+    } else if (this.state.btnState == "DONE") {
+      this.reset()
     }
   };
 
@@ -178,10 +187,10 @@ export default class Timer extends React.Component {
           {this.state.minutes}:{this.state.seconds}
         </Text>
         <Text>
-          Remaining Reps: {this.state.currentRepState}/{this.state.repsNum}
+          Reps: {this.state.currentRepState} of {this.state.repsNum}
         </Text>
         <Text>
-          Remaining sets: {this.state.currentSetsState}/{this.state.setsNum}
+          Set: {this.state.currentSetsState} of {this.state.setsNum}
         </Text>
 
         <Text>
